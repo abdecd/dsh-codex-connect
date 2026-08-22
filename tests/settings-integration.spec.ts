@@ -96,4 +96,26 @@ describe('OpenAI Codex Host settings integration', () => {
     await plugin.dispose()
     expect(ctx.llm.listConfigurableProviders()).toEqual([])
   })
+
+  it('reuses an existing OpenAI Codex configurable-provider directory entry', async () => {
+    root = await mkdtemp(join(tmpdir(), 'dsh-codex-connect-directory-'))
+    vi.stubEnv('DSH_HOME', root)
+    const ctx = new Context()
+    context = ctx
+    await ctx.plugin(LlmRuntime)
+    const directory = ctx.llm.registerConfigurableProviders([{
+      provider: OpenAICodex.OPENAI_CODEX_PROVIDER,
+      displayName: 'OpenAI Codex',
+      settingsNs: 'llm-pi-ai',
+      settingsPath: ['providers', OpenAICodex.OPENAI_CODEX_PROVIDER],
+      declared: false,
+    }])
+
+    const plugin = await ctx.plugin(OpenAICodex, {})
+
+    expect(ctx.llm.listConfigurableProviders()).toHaveLength(1)
+    expect(ctx.llm.listProviders()).toEqual([{ id: 'openai-codex', name: 'OpenAI Codex' }])
+    await plugin.dispose()
+    expect(ctx.llm.listConfigurableProviders()).toHaveLength(1)
+  })
 })

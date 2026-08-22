@@ -1,14 +1,12 @@
 /** Native browser view for Codex image-generation tool results. */
 
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useId, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
 import type { ImageAttachmentRef } from '@deepseek-ai/dsh-attachment'
 import type { PromptContentPart } from '@deepseek-ai/dsh-api-remotes/client'
 import type { ISessions } from '@deepseek-ai/dsh-client-runtime/client'
 import type { PropsRuntime, Translate } from '@deepseek-ai/dsh-client-ui-slots'
 import type {} from '@deepseek-ai/dsh-client-ui-tool/client'
-import { ImageGallery } from '@deepseek-ai/dsh-client-ui-attachment'
-import type { MessageImageLabels } from '@deepseek-ai/dsh-client-ui-attachment'
 import {
   IconCheckOutline16,
   IconCopyOutline16,
@@ -239,15 +237,29 @@ function useImageLoader(sessionId: string, sessions: ISessions) {
   }, [sessionId, sessions])
 }
 
-function labels(t: Translate<OpenAICodexSettingsKey>): MessageImageLabels {
-  return {
-    image: t('image'),
-    open: t('open'),
-    openNamed: label => t('openNamed', { name: label }),
-    loading: t('loading'),
-    loadFailed: t('loadFailed'),
-    lightbox: { dialog: t('lightboxDialog'), close: t('lightboxClose') },
-  }
+function GeneratedImages({ images, load, t }: {
+  images: readonly ImageAttachmentRef[]
+  load: (image: ImageAttachmentRef) => Promise<string>
+  t: Translate<OpenAICodexSettingsKey>
+}) {
+  const [urls, setUrls] = useState<ReadonlyMap<string, string>>(new Map())
+  useEffect(() => {
+    let active = true
+    void Promise.all(images.map(async image => [image.attachmentId as string, await load(image)] as const)).then(entries => {
+      if (active) setUrls(new Map(entries))
+    }).catch(() => {
+      if (active) setUrls(new Map())
+    })
+    return () => { active = false }
+  }, [images, load])
+  return <div data-testid="codex-generated-images" style={{ display: 'grid', gap: 8 }}>
+    {images.map((image, index) => {
+      const url = urls.get(image.attachmentId as string)
+      const label = image.name ?? `${t('image')} ${String(index + 1)}`
+      return url === undefined ? <span key={image.attachmentId as string} style={detail}>{t('loading')}</span>
+        : <img key={image.attachmentId as string} src={url} alt={label} style={{ display: 'block', width: '100%', height: 'auto', borderRadius: 8 }} />
+    })}
+  </div>
 }
 
 function errorState(block: Extract<CodexImageToolViewProps['block'], { kind: 'tool-result' }>, t: Translate<OpenAICodexSettingsKey>) {
@@ -261,7 +273,6 @@ function errorState(block: Extract<CodexImageToolViewProps['block'], { kind: 'to
 export function CodexImageToolView({ block, sessionId, t, sessions }: CodexImageToolViewProps) {
   const load = useImageLoader(sessionId, sessions)
   const sessionActions = useSessionActions(sessionId, sessions)
-  const galleryLabels = useMemo(() => labels(t), [t])
   const prompt = promptFor(block)
   if (!('kind' in block)) return <ResponsiveCard
     label={t('generating')}
@@ -311,7 +322,7 @@ export function CodexImageToolView({ block, sessionId, t, sessions }: CodexImage
 
   return <ResponsiveCard
     label={t('completed')}
-    visual={<><div style={header}><strong>{t('completed')}</strong></div><ImageGallery images={decoded.images.map(attachment => ({ attachment }))} load={load} align="start" labels={galleryLabels} /></>}
+    visual={<><div style={header}><strong>{t('completed')}</strong></div><GeneratedImages images={decoded.images} load={load} t={t} /></>}
     side={<>
       <PromptPanel prompt={decoded.prompt} t={t} />
       <div style={actionRow}>
