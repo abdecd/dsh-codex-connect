@@ -14,6 +14,9 @@ import type { FastModeRegistry } from './fast-mode.ts'
 /** Provider idle ceiling used by the composite route. */
 export const OPENAI_CODEX_STREAM_IDLE_TIMEOUT_MS = 300_000
 const OPENAI_CODEX_MAX_REQUEST_IMAGE_BYTES = 20 * 1024 * 1024
+/** Inline request image budgets mirroring the dsh-llm-pi-ai adapter defaults (2048px normalized, 1MiB raw). */
+const OPENAI_CODEX_REQUEST_IMAGE_PIXEL_BUDGET = 2048 * 2048
+const OPENAI_CODEX_REQUEST_IMAGE_MAX_BYTES = 1024 * 1024
 
 const openAICodexAuthContext: AuthContext = {
   env: async () => undefined,
@@ -96,6 +99,8 @@ export function createOpenAICodexAdapter(
     displayName: 'OpenAI Codex',
     streamIdleTimeoutMs: OPENAI_CODEX_STREAM_IDLE_TIMEOUT_MS,
     maxRequestImageBytes: OPENAI_CODEX_MAX_REQUEST_IMAGE_BYTES,
+    requestImagePixelBudget: OPENAI_CODEX_REQUEST_IMAGE_PIXEL_BUDGET,
+    requestImageMaxBytes: OPENAI_CODEX_REQUEST_IMAGE_MAX_BYTES,
     retryPolicy: resolveRetryPolicy(undefined, 'dsh-codex-connect retryPolicy'),
     configuredMaxTokens: new Map(),
     piProvider: requestProvider(provider, fastMode),
