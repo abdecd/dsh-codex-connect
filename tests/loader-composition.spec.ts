@@ -60,6 +60,15 @@ describe('OpenAI Codex real composition', () => {
     expect(ctx.llm.listProviders()).toEqual([{ id: 'openai-codex', name: 'OpenAI Codex' }])
     const models = await ctx.llm.listModels('openai-codex')
     expect(models.some(model => model.id === 'gpt-5.6-sol')).toBe(true)
+    expect(models.some(model => model.id === 'gpt-6-astra')).toBe(true)
+    const gpt6 = await ctx.llm.resolveModelInfo('openai-codex', 'gpt-6-astra')
+    expect(gpt6.reasoning?.efforts.map(effort => effort.id)).toEqual([
+      'low',
+      'medium',
+      'high',
+      'xhigh',
+      'max',
+    ])
 
     await expect(ctx.web.search({ query: 'must stay unconfigured' }))
       .rejects.toMatchObject({ code: 'WEB_PROVIDER_UNAVAILABLE' })

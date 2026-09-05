@@ -1,7 +1,7 @@
 /** OpenAI Codex adapter assembled from public dsh-llm-pi-ai extension points. */
 
 import { createModels } from '@earendil-works/pi-ai'
-import type { AuthContext, Context as PiContext, MutableModels, Provider, SimpleStreamOptions } from '@earendil-works/pi-ai'
+import type { AuthContext, Context as PiContext, Model, MutableModels, Provider, SimpleStreamOptions } from '@earendil-works/pi-ai'
 import { openaiCodexProvider } from '@earendil-works/pi-ai/providers/openai-codex'
 import { resolveRetryPolicy } from '@deepseek-ai/dsh-llm'
 import { PiAiAdapter } from '@deepseek-ai/dsh-llm-pi-ai'
@@ -17,6 +17,44 @@ const OPENAI_CODEX_MAX_REQUEST_IMAGE_BYTES = 20 * 1024 * 1024
 /** Inline request image budgets mirroring the dsh-llm-pi-ai adapter defaults (2048px normalized, 1MiB raw). */
 const OPENAI_CODEX_REQUEST_IMAGE_PIXEL_BUDGET = 2048 * 2048
 const OPENAI_CODEX_REQUEST_IMAGE_MAX_BYTES = 1024 * 1024
+const OPENAI_CODEX_BASE_URL = 'https://chatgpt.com/backend-api'
+const OPENAI_CODEX_GPT6_MODEL: Model<'openai-codex-responses'> = {
+  id: 'gpt-6-astra',
+  name: 'GPT-6 Astra',
+  api: 'openai-codex-responses',
+  provider: OPENAI_CODEX_PROVIDER,
+  baseUrl: OPENAI_CODEX_BASE_URL,
+  reasoning: true,
+  thinkingLevelMap: {
+    off: null,
+    minimal: null,
+    low: 'low',
+    medium: 'medium',
+    high: 'high',
+    xhigh: 'xhigh',
+    max: 'max',
+  },
+  input: ['text', 'image'],
+  cost: {
+    input: 10,
+    output: 50,
+    cacheRead: 1,
+    cacheWrite: 12.5,
+    tiers: [{
+      inputTokensAbove: 272_000,
+      input: 20,
+      output: 75,
+      cacheRead: 2,
+      cacheWrite: 25,
+    }],
+  },
+  contextWindow: 272_000,
+  maxTokens: 128_000,
+  compat: {
+    supportsOpenAIGrammarTools: true,
+    supportsToolSearch: true,
+  },
+}
 
 const openAICodexAuthContext: AuthContext = {
   env: async () => undefined,
@@ -93,7 +131,20 @@ export function createOpenAICodexAdapter(
   resolveAttachments: () => AttachmentStore | undefined,
   fastMode?: FastModeRegistry,
 ): PiAiAdapter {
-  const provider = openaiCodexProvider()
+  const upstreamProvider = openaiCodexProvider()
+  const upstreamGetModels = upstreamProvider.getModels.bind(upstreamProvider)
+  // Backport the GPT-6 Astra catalog entry from the pi upstream until the
+  // pinned pi-ai dependency ships it. The Codex Responses transport is already
+  // model-id based, so no separate request implementation is required.
+  const provider: Provider<'openai-codex-responses'> = {
+    ...upstreamProvider,
+    getModels: () => {
+      const models = upstreamGetModels()
+      return models.some(model => model.id === OPENAI_CODEX_GPT6_MODEL.id)
+        ? models
+        : [...models, OPENAI_CODEX_GPT6_MODEL]
+    },
+  }
   const profiles = new Map<string, ResolvedPiAiProviderProfile>([[OPENAI_CODEX_PROVIDER, {
     provider: OPENAI_CODEX_PROVIDER,
     displayName: 'OpenAI Codex',
