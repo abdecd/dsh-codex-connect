@@ -109,7 +109,7 @@ The installed bundle is intentionally inert beyond model-provider registration:
     enableImageGeneration: false
 ```
 
-Open **Settings → Plugins → Plugin configuration → Codex Connect** to manage the account and these options in one card. **Save changes** affects only this plugin's capability section and applies live. It never selects a default model or a global search route.
+Open **Settings → Plugins → Plugin configuration → Codex Connect** to manage the account, the model-picker visibility, and these options in one card. The **Models shown in the picker** checkboxes control which Codex models appear in the conversation model selector. **Save changes** affects only this plugin's settings and applies live; it never selects a default model or a global search route. Hidden models remain valid for existing or explicitly configured routes.
 
 ### Enable only the capability you intend to use
 
@@ -174,6 +174,7 @@ Selecting Codex as the profile's global search route is another explicit change:
 
 | Field | Default | Values |
 |---|---:|---|
+| `enabledModels` | all bundled Codex models | non-empty list of Codex model ids |
 | `enableSearch` | `false` | boolean |
 | `enableImageTool` | `false` | boolean |
 | `enableImageGeneration` | `false` | boolean |

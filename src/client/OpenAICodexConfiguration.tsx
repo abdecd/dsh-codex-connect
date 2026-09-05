@@ -3,7 +3,10 @@
 import { useCallback, useEffect, useState, useSyncExternalStore } from 'react'
 import type { CSSProperties } from 'react'
 import type { SettingsScope } from '@deepseek-ai/dsh-client-runtime/client'
-import type { OpenAICodexSettingsConfig } from '../settings-contract.ts'
+import {
+  OPENAI_CODEX_MODEL_OPTIONS,
+  type OpenAICodexSettingsConfig,
+} from '../settings-contract.ts'
 import type { OpenAICodexSettingsKey } from './locales.ts'
 
 export interface OpenAICodexConfigurationProps {
@@ -21,6 +24,9 @@ const labelStyle: CSSProperties = { fontSize: 13, lineHeight: '20px', fontWeight
 const formGridStyle: CSSProperties = { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: 12 }
 const formFieldStyle: CSSProperties = { display: 'flex', flexDirection: 'column', gap: 6 }
 const controlStyle: CSSProperties = { boxSizing: 'border-box', width: '100%', minHeight: 36, padding: '7px 10px', border: '1px solid var(--dsw-alias-border-l2)', borderRadius: 8, background: 'var(--dsw-alias-bg-layer-1)', color: 'var(--dsw-alias-label-primary)', font: 'inherit', fontSize: 13 }
+const modelSelectionStyle: CSSProperties = { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 8 }
+const modelOptionStyle: CSSProperties = { display: 'flex', alignItems: 'flex-start', gap: 9, padding: '8px 10px', border: '1px solid var(--dsw-alias-border-l2)', borderRadius: 8, cursor: 'pointer' }
+const modelOptionCopyStyle: CSSProperties = { display: 'flex', flexDirection: 'column', gap: 1, minWidth: 0 }
 const actionsStyle: CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }
 const buttonsStyle: CSSProperties = { display: 'flex', gap: 8 }
 const buttonStyle: CSSProperties = { boxSizing: 'border-box', minHeight: 34, padding: '6px 14px', border: '1px solid var(--dsw-alias-border-l2)', borderRadius: 18, background: 'var(--dsw-alias-bg-layer-1)', color: 'var(--dsw-alias-label-primary)', font: 'inherit', fontSize: 13, cursor: 'pointer' }
@@ -39,6 +45,7 @@ const UNAVAILABLE_SNAPSHOT = {
 }
 
 const CONFIG_FIELDS = [
+  'enabledModels',
   'enableSearch',
   'enableImageTool',
   'enableImageGeneration',
@@ -48,12 +55,26 @@ const CONFIG_FIELDS = [
   'searchMaxOutputTokens',
 ] as const satisfies readonly (keyof OpenAICodexSettingsConfig)[]
 
+function sameStringList(left: readonly string[], right: readonly string[]): boolean {
+  return left.length === right.length && left.every((value, index) => value === right[index])
+}
+
+function sameField(
+  left: OpenAICodexSettingsConfig,
+  right: OpenAICodexSettingsConfig,
+  field: keyof OpenAICodexSettingsConfig,
+): boolean {
+  return field === 'enabledModels'
+    ? sameStringList(left.enabledModels, right.enabledModels)
+    : left[field] === right[field]
+}
+
 function sameConfig(
   left: OpenAICodexSettingsConfig | undefined,
   right: OpenAICodexSettingsConfig | undefined,
 ): boolean {
   return left !== undefined && right !== undefined
-    && CONFIG_FIELDS.every(field => left[field] === right[field])
+    && CONFIG_FIELDS.every(field => sameField(left, right, field))
 }
 
 /** Edit the Host-owned llm-openai-codex settings section with Save/Discard staging. */
@@ -93,7 +114,16 @@ export function OpenAICodexConfiguration({ scope, t }: OpenAICodexConfigurationP
   const validTokens = draft !== undefined
     && Number.isInteger(draft.searchMaxOutputTokens)
     && draft.searchMaxOutputTokens > 0
-  const valid = validModel && validTokens
+  const validModels = draft !== undefined && draft.enabledModels.length > 0
+  const valid = validModel && validTokens && validModels
+
+  const toggleModel = (modelId: string): void => {
+    if (draft === undefined) return
+    const enabledModels = draft.enabledModels.includes(modelId)
+      ? draft.enabledModels.filter(id => id !== modelId)
+      : [...draft.enabledModels, modelId]
+    update('enabledModels', enabledModels)
+  }
 
   const save = async (): Promise<void> => {
     if (scope === undefined || draft === undefined || !snapshot.writable || !valid) return
@@ -103,9 +133,11 @@ export function OpenAICodexConfiguration({ scope, t }: OpenAICodexConfigurationP
     try {
       for (const field of CONFIG_FIELDS) {
         const accepted = scope.getSnapshot().value
-        if (accepted?.[field] === desired[field]) continue
-        await scope.set(field, desired[field])
-        if (scope.getSnapshot().value?.[field] !== desired[field]) {
+        if (accepted !== undefined && sameField(accepted, desired, field)) continue
+        const value = field === 'enabledModels' ? [...desired.enabledModels] : desired[field]
+        await scope.set(field, value)
+        const next = scope.getSnapshot().value
+        if (next === undefined || !sameField(next, desired, field)) {
           throw new Error(`Host refused ${field}`)
         }
       }
@@ -138,6 +170,29 @@ export function OpenAICodexConfiguration({ scope, t }: OpenAICodexConfigurationP
       {snapshot.status === 'ready' && !snapshot.writable ? <p style={errorStyle} role="alert">{t('settingsReadOnly')}</p> : null}
       {draft === undefined ? null : (
         <fieldset style={fieldsetStyle} disabled={!editable}>
+          <div>
+            <h4 id="openai-codex-model-selection-title" style={labelStyle}>{t('modelSelectionHeading')}</h4>
+            <p style={{ ...bodyStyle, marginTop: 4 }}>{t('modelSelectionIntro')}</p>
+            <div
+              role="group"
+              aria-labelledby="openai-codex-model-selection-title"
+              style={{ ...modelSelectionStyle, marginTop: 10 }}
+            >
+              {OPENAI_CODEX_MODEL_OPTIONS.map(model => (
+                <label key={model.id} style={modelOptionStyle}>
+                  <input
+                    type="checkbox"
+                    checked={draft.enabledModels.includes(model.id)}
+                    onChange={() => { toggleModel(model.id) }}
+                  />
+                  <span style={modelOptionCopyStyle}>
+                    <span style={labelStyle}>{model.name}</span>
+                    <span style={bodyStyle}>{model.id}</span>
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
           <label style={toggleRowStyle}>
             <input
               type="checkbox"
@@ -224,6 +279,7 @@ export function OpenAICodexConfiguration({ scope, t }: OpenAICodexConfigurationP
           </label>
         </fieldset>
       )}
+      {!validModels && draft !== undefined ? <p style={errorStyle} role="alert">{t('invalidEnabledModels')}</p> : null}
       {!validModel && draft !== undefined ? <p style={errorStyle} role="alert">{t('invalidSearchModel')}</p> : null}
       {!validTokens && draft !== undefined ? <p style={errorStyle} role="alert">{t('invalidSearchTokens')}</p> : null}
       <p style={bodyStyle}>{t('routingNote')}</p>

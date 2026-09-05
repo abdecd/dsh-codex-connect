@@ -83,6 +83,15 @@ describe('OpenAI Codex Host settings integration', () => {
     await expect(ctx.web.search({ query: 'enabled' })).rejects.toMatchObject({ code: 'WEB_PROVIDER_CREDENTIAL_MISSING' })
 
     await ctx.settings.update(OpenAICodex.OPENAI_CODEX_SETTINGS_NS, {
+      enabledModels: ['gpt-6-astra'],
+    })
+    expect((await ctx.llm.listModels(OpenAICodex.OPENAI_CODEX_PROVIDER)).map(model => model.id)).toEqual(['gpt-6-astra'])
+    await expect(ctx.llm.resolveModelInfo(OpenAICodex.OPENAI_CODEX_PROVIDER, 'gpt-5.6-sol')).resolves.toMatchObject({
+      id: 'gpt-5.6-sol',
+      name: 'GPT-5.6 Sol',
+    })
+
+    await ctx.settings.update(OpenAICodex.OPENAI_CODEX_SETTINGS_NS, {
       enableSearch: false,
       enableImageTool: false,
       enableImageGeneration: false,

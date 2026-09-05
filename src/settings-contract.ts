@@ -9,6 +9,21 @@ export type OpenAICodexSearchMode = 'cached' | 'indexed' | 'live'
 /** Search-context sizes accepted by the Codex standalone search endpoint. */
 export type OpenAICodexSearchContextSize = 'low' | 'medium' | 'high'
 
+/** Models offered by the Codex model picker in Plugin settings. */
+export const OPENAI_CODEX_MODEL_OPTIONS = [
+  { id: 'gpt-5.3-codex-spark', name: 'GPT-5.3 Codex Spark' },
+  { id: 'gpt-5.4', name: 'GPT-5.4' },
+  { id: 'gpt-5.4-mini', name: 'GPT-5.4 mini' },
+  { id: 'gpt-5.5', name: 'GPT-5.5' },
+  { id: 'gpt-5.6-luna', name: 'GPT-5.6 Luna' },
+  { id: 'gpt-5.6-sol', name: 'GPT-5.6 Sol' },
+  { id: 'gpt-5.6-terra', name: 'GPT-5.6 Terra' },
+  { id: 'gpt-6-astra', name: 'GPT-6 Astra' },
+] as const
+
+/** Default to showing every model known by this plugin. */
+export const DEFAULT_OPENAI_CODEX_ENABLED_MODELS = OPENAI_CODEX_MODEL_OPTIONS.map(model => model.id)
+
 /** Default model used by the standalone search endpoint. */
 export const DEFAULT_OPENAI_CODEX_SEARCH_MODEL = 'gpt-5.6-sol'
 /** Default search mode, matching the official local Codex client. */
@@ -20,6 +35,8 @@ export const DEFAULT_OPENAI_CODEX_SEARCH_MAX_OUTPUT_TOKENS = 10_000
 
 /** Fully resolved user-editable section presented by Plugin configuration. */
 export interface OpenAICodexSettingsConfig {
+  /** Exact model ids shown by the conversation model picker. */
+  enabledModels: string[]
   enableSearch: boolean
   enableImageTool: boolean
   enableImageGeneration: boolean
@@ -30,6 +47,7 @@ export interface OpenAICodexSettingsConfig {
 }
 
 export const DEFAULT_OPENAI_CODEX_SETTINGS: Readonly<OpenAICodexSettingsConfig> = Object.freeze({
+  enabledModels: [...DEFAULT_OPENAI_CODEX_ENABLED_MODELS],
   enableSearch: false,
   enableImageTool: false,
   enableImageGeneration: false,
@@ -43,7 +61,13 @@ export const DEFAULT_OPENAI_CODEX_SETTINGS: Readonly<OpenAICodexSettingsConfig> 
 export function resolveOpenAICodexSettings(
   value: Partial<OpenAICodexSettingsConfig>,
 ): OpenAICodexSettingsConfig {
-  return { ...DEFAULT_OPENAI_CODEX_SETTINGS, ...value }
+  return {
+    ...DEFAULT_OPENAI_CODEX_SETTINGS,
+    ...value,
+    enabledModels: value.enabledModels === undefined
+      ? [...DEFAULT_OPENAI_CODEX_ENABLED_MODELS]
+      : [...value.enabledModels],
+  }
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -53,6 +77,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 /** Narrow the redacted settings wire payload before it enters React state. */
 export function decodeOpenAICodexSettings(value: unknown): OpenAICodexSettingsConfig | undefined {
   if (!isRecord(value)) return undefined
+  const enabledModels = value['enabledModels']
   const enableSearch = value['enableSearch']
   const enableImageTool = value['enableImageTool']
   const enableImageGeneration = value['enableImageGeneration']
@@ -60,6 +85,10 @@ export function decodeOpenAICodexSettings(value: unknown): OpenAICodexSettingsCo
   const searchMode = value['searchMode']
   const searchContextSize = value['searchContextSize']
   const searchMaxOutputTokens = value['searchMaxOutputTokens']
+  if (enabledModels !== undefined
+    && (!Array.isArray(enabledModels)
+      || enabledModels.length === 0
+      || enabledModels.some(model => typeof model !== 'string' || model.trim().length === 0))) return undefined
   if (typeof enableSearch !== 'boolean' || typeof enableImageTool !== 'boolean') return undefined
   // Older Host snapshots predate image generation; absence maps to its safe default.
   if (enableImageGeneration !== undefined && typeof enableImageGeneration !== 'boolean') return undefined
@@ -68,6 +97,9 @@ export function decodeOpenAICodexSettings(value: unknown): OpenAICodexSettingsCo
   if (searchContextSize !== 'low' && searchContextSize !== 'medium' && searchContextSize !== 'high') return undefined
   if (typeof searchMaxOutputTokens !== 'number' || !Number.isInteger(searchMaxOutputTokens) || searchMaxOutputTokens < 1) return undefined
   return {
+    enabledModels: enabledModels === undefined
+      ? [...DEFAULT_OPENAI_CODEX_ENABLED_MODELS]
+      : [...enabledModels],
     enableSearch,
     enableImageTool,
     enableImageGeneration: enableImageGeneration ?? false,

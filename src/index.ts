@@ -81,13 +81,17 @@ import {
 import type { OpenAICodexSearchContextSize, OpenAICodexSearchMode } from './search.ts'
 import { OpenAICodexCredentialStore, OPENAI_CODEX_PROVIDER } from './store.ts'
 import {
+  DEFAULT_OPENAI_CODEX_ENABLED_MODELS,
+  OPENAI_CODEX_MODEL_OPTIONS,
   OPENAI_CODEX_SETTINGS_NAMESPACE,
   resolveOpenAICodexSettings,
 } from './settings-contract.ts'
 
 export {
   decodeOpenAICodexSettings,
+  DEFAULT_OPENAI_CODEX_ENABLED_MODELS,
   DEFAULT_OPENAI_CODEX_SETTINGS,
+  OPENAI_CODEX_MODEL_OPTIONS,
   OPENAI_CODEX_SETTINGS_NAMESPACE,
   resolveOpenAICodexSettings,
 } from './settings-contract.ts'
@@ -171,6 +175,8 @@ export const OPENAI_CODEX_SETTINGS_NS = settingsNamespace(OPENAI_CODEX_SETTINGS_
 
 /** Composite model and standalone-search configuration. */
 export interface Config {
+  /** Exact Codex model ids shown by the conversation model picker. */
+  enabledModels?: string[]
   /** Register the optional standalone Codex search provider. */
   enableSearch?: boolean
   /** Register the optional image-loading tool. */
@@ -188,6 +194,7 @@ export interface Config {
 }
 
 export const Config: z<Config> = z.object({
+  enabledModels: z.array(z.string().min(1)).min(1).default([...DEFAULT_OPENAI_CODEX_ENABLED_MODELS]),
   enableSearch: z.boolean().default(false),
   enableImageTool: z.boolean().default(false),
   enableImageGeneration: z.boolean().default(false),
@@ -212,7 +219,12 @@ export function apply(ctx: Context, config: Config): void {
   new OpenAICodexTransport(ctx, credentials)
   ctx.llm.registerAdapter(
     [OPENAI_CODEX_PROVIDER],
-    createOpenAICodexAdapter(credentials, () => ctx.get('attachments'), fastMode),
+    createOpenAICodexAdapter(
+      credentials,
+      () => ctx.get('attachments'),
+      fastMode,
+      () => resolveOpenAICodexSettings(current()).enabledModels,
+    ),
   )
   if (!ctx.llm.listConfigurableProviders().some(entry => entry.provider === OPENAI_CODEX_PROVIDER)) {
     ctx.llm.registerConfigurableProviders([{

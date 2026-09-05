@@ -109,7 +109,7 @@ dsh plugin --profile web exec dsh-codex-connect doctor --json
     enableImageGeneration: false
 ```
 
-打开 **设置 → 插件 → 插件配置 → Codex Connect**，即可在同一张卡片中管理账户和这些选项。**保存更改**只影响本插件的能力配置并即时生效，绝不会选择默认模型或全局搜索路由。
+打开 **设置 → 插件 → 插件配置 → Codex Connect**，即可在同一张卡片中管理账户、模型选择器显示范围和这些选项。**模型选择器显示的模型**中的复选框决定对话模型选择器显示哪些 Codex 模型。**保存更改**只影响本插件的设置并即时生效，绝不会选择默认模型或全局搜索路由；隐藏的模型仍可用于已有或显式配置的路由。
 
 ### 只开启你准备使用的能力
 
@@ -174,6 +174,7 @@ dsh plugin --profile web exec dsh-codex-connect doctor --json
 
 | 字段 | 默认值 | 可选值 |
 |---|---:|---|
+| `enabledModels` | 所有内置 Codex 模型 | 非空 Codex 模型 ID 列表 |
 | `enableSearch` | `false` | boolean |
 | `enableImageTool` | `false` | boolean |
 | `enableImageGeneration` | `false` | boolean |

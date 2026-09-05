@@ -130,6 +130,7 @@ export function createOpenAICodexAdapter(
   credentials: OpenAICodexCredentialStore,
   resolveAttachments: () => AttachmentStore | undefined,
   fastMode?: FastModeRegistry,
+  resolveEnabledModels?: () => readonly string[] | undefined,
 ): PiAiAdapter {
   const upstreamProvider = openaiCodexProvider()
   const upstreamGetModels = upstreamProvider.getModels.bind(upstreamProvider)
@@ -158,7 +159,7 @@ export function createOpenAICodexAdapter(
   }]])
   const models: MutableModels = createModels({ credentials })
   models.setProvider(provider)
-  return new PiAiAdapter({
+  const adapter = new PiAiAdapter({
     profiles: () => profiles,
     resolveApiKey: async () => (await models.getAuth(OPENAI_CODEX_PROVIDER))?.auth.apiKey,
     auth: {
@@ -167,4 +168,16 @@ export function createOpenAICodexAdapter(
     },
     resolveAttachments,
   })
+  const listModels = adapter.listModels.bind(adapter)
+  // Model-directory membership is advisory in dsh-llm. Filter only the
+  // discovery result so existing or manually supplied model routes remain
+  // resolvable through the complete provider catalog.
+  adapter.listModels = async providerId => {
+    const listed = await listModels(providerId)
+    const enabledModels = resolveEnabledModels?.()
+    if (enabledModels === undefined) return listed
+    const enabled = new Set(enabledModels)
+    return listed.filter(model => enabled.has(model.id))
+  }
+  return adapter
 }

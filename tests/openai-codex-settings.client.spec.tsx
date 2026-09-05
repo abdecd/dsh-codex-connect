@@ -305,9 +305,13 @@ describe('OpenAI Codex Plugin configuration card', () => {
     render(<OpenAICodexSettings t={t} configScope={scope} embedded />)
     const enableSearch = await screen.findByRole('checkbox', { name: /Enable Codex search provider/u }) as HTMLInputElement
     const enableImageGeneration = screen.getByRole('checkbox', { name: /Enable GPT Image generation/u }) as HTMLInputElement
+    const gpt6Model = screen.getByRole('checkbox', { name: /GPT-6 Astra/u }) as HTMLInputElement
     const model = screen.getByRole('textbox', { name: en.searchModel }) as HTMLInputElement
     expect(enableSearch.checked).toBe(false)
     expect(enableImageGeneration.checked).toBe(false)
+    expect(gpt6Model.checked).toBe(true)
+    expect(en.modelSelectionHeading).toBe('Models shown in the picker')
+    expect(zh.modelSelectionHeading).toBe('模型选择器显示的模型')
     expect(en.enableImageGenerationHelp).toBe('Let GPT models use GPT Image to generate images in conversations.')
     expect(zh.enableImageGeneration).toBe('启用 GPT Image 图片生成')
     expect(zh.enableImageGenerationHelp).toBe('启用后，GPT 模型可以在对话中调用 GPT Image 生成图片。')
@@ -325,9 +329,11 @@ describe('OpenAI Codex Plugin configuration card', () => {
     fireEvent.change(screen.getByRole('combobox', { name: en.searchMode }), { target: { value: 'live' } })
     fireEvent.change(screen.getByRole('spinbutton', { name: en.searchMaxOutputTokens }), { target: { value: '2048' } })
     fireEvent.click(enableImageGeneration)
+    fireEvent.click(gpt6Model)
     fireEvent.click(screen.getByRole('button', { name: en.save }))
 
     expect(await screen.findByText(en.settingsSaved)).toBeTruthy()
+    expect(set).toHaveBeenCalledWith('enabledModels', DEFAULT_OPENAI_CODEX_SETTINGS.enabledModels.filter(id => id !== 'gpt-6-astra'))
     expect(set).toHaveBeenCalledWith('enableSearch', true)
     expect(set).toHaveBeenCalledWith('searchModel', 'gpt-search-custom')
     expect(set).toHaveBeenCalledWith('searchMode', 'live')
