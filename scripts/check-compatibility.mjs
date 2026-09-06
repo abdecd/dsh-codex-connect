@@ -10,8 +10,8 @@ const COMPATIBILITY_FILE = join(REPO_ROOT, 'compatibility.json')
 const PACKAGE_FILE = join(REPO_ROOT, 'package.json')
 const JSON_SCHEMA_VERSION = 1
 const REQUIRED_NODE_RANGE = '^22.19.0 || >=24.0.0'
-const REQUIRED_DSH_VERSION = '0.1.1-rc.2'
-const REQUIRED_PI_AI_VERSION = '0.82.1'
+const REQUIRED_DSH_VERSION = '0.1.2-rc.1'
+const REQUIRED_PI_AI_VERSION = '0.84.4'
 const PI_AI_PACKAGE = '@earendil-works/pi-ai'
 const MAX_PACKAGE_JSON_SEARCH_DEPTH = 8
 
@@ -98,7 +98,7 @@ async function main() {
 
   const peers = packageJson.peerDependencies ?? {}
   for (const [name, version] of Object.entries(peers)) {
-    if (name.startsWith('@deepseek-ai/dsh-') && version !== REQUIRED_DSH_VERSION) {
+    if (name.startsWith('@deepseek-ai/dsh-') && version !== `^${REQUIRED_DSH_VERSION}`) {
       fail(`peer dependency ${name} must be pinned to ${REQUIRED_DSH_VERSION}`)
     }
   }

@@ -12,7 +12,7 @@ Install `dsh-codex-connect` into one requested DeepSeek Harness profile without 
 
 ## Install and validate
 
-The only verified combination is DSH plugin API packages `0.1.1-rc.2`, `@earendil-works/pi-ai` `0.82.1`, and Node.js `^22.19.0 || >=24.0.0`. Alpha 4.10 uses the rc.7 keyed Plugin configuration slot; DSH rc.6 users should remain on Alpha 4.9. Upgrade the DSH API packages and pi-ai together, then rerun `dsh-codex-connect doctor --json` and `pnpm --silent run check:compatibility`; the contract does not make claims about future versions.
+The only verified combination is DSH plugin API packages `0.1.2-rc.1`, `@earendil-works/pi-ai` `0.84.4`, and Node.js `^22.19.0 || >=24.0.0`. Alpha 4.10 uses the rc.7 keyed Plugin configuration slot; DSH rc.6 users should remain on Alpha 4.9. Upgrade the DSH API packages and pi-ai together, then rerun `dsh-codex-connect doctor --json` and `pnpm --silent run check:compatibility`; the contract does not make claims about future versions.
 
 1. Check `dsh --version` or `dsh --help`. From a Harness checkout use `pnpm dsh`.
 2. Install the package:

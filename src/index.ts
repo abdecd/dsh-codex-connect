@@ -7,7 +7,9 @@
 import type { Context, Fiber } from '@deepseek-ai/cordis'
 import { randomUUID } from 'node:crypto'
 import z from '@deepseek-ai/schemastery'
-import { deepEqualJson, installSettingsSection, settingsNamespace } from '@deepseek-ai/dsh-settings'
+import type { SettingsNamespace } from '@deepseek-ai/dsh-settings'
+import { deepEqualJson } from '@deepseek-ai/dsh-util-values'
+import { brandString } from '@deepseek-ai/dsh-brand'
 import type {} from '@deepseek-ai/dsh-attachment'
 import type {} from '@deepseek-ai/dsh-agent'
 import type {} from '@deepseek-ai/dsh-session'
@@ -171,7 +173,7 @@ export const name = 'llm-openai-codex'
 export const inject = ['llm']
 
 /** Branded Host settings namespace used by the configurable-provider directory. */
-export const OPENAI_CODEX_SETTINGS_NS = settingsNamespace(OPENAI_CODEX_SETTINGS_NAMESPACE)
+export const OPENAI_CODEX_SETTINGS_NS = brandString<SettingsNamespace>(OPENAI_CODEX_SETTINGS_NAMESPACE)
 
 /** Composite model and standalone-search configuration. */
 export interface Config {
@@ -235,7 +237,7 @@ export function apply(ctx: Context, config: Config): void {
       declared: false,
     }])
   }
-  ctx.inject(['webServer'], webCtx => registerOpenAICodexAuthRoutes(webCtx, credentials, undefined, fastMode))
+  ctx.inject(['webServer', 'connection'], webCtx => registerOpenAICodexAuthRoutes(webCtx, credentials, undefined, fastMode))
 
   let stopped = false
   let searchFiber: Fiber | undefined
@@ -354,9 +356,9 @@ export function apply(ctx: Context, config: Config): void {
     ])
   }, 'dsh-codex-connect: optional capability lifecycle')
 
-  installSettingsSection(ctx, OPENAI_CODEX_SETTINGS_NS, Config, config, {
+  ctx.inject(['settings'], settingsCtx => settingsCtx.settings.installSection(ctx, OPENAI_CODEX_SETTINGS_NS, Config, config, {
     setSource(source) { current = source },
     onChange: scheduleCapabilities,
-  })
+  }))
   scheduleCapabilities()
 }

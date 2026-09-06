@@ -7,7 +7,7 @@ import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const JSON_SCHEMA_VERSION = 1
-const DEFAULT_DSH_VERSION = '0.1.1-rc.2'
+const DEFAULT_DSH_VERSION = '0.1.2-rc.1'
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 
 function commandName(name) {
@@ -84,7 +84,7 @@ function assertDoctorJson(value, dshHome, repoRoot) {
   }
   for (const name of expectedPackages) {
     const entry = compatibility?.['packages']?.[name]
-    const supported = name === '@earendil-works/pi-ai' ? '0.82.1' : DEFAULT_DSH_VERSION
+    const supported = name === '@earendil-works/pi-ai' ? '0.84.4' : DEFAULT_DSH_VERSION
     if (entry?.['supported'] !== supported || entry?.['installed'] !== supported || entry?.['status'] !== 'compatible') {
       throw new Error(`doctor JSON did not report compatible ${name}`)
     }

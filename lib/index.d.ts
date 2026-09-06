@@ -3,6 +3,7 @@ import { AuthInteraction, Credential, CredentialInfo, CredentialStore } from "@e
 import "@deepseek-ai/dsh-tools";
 import { Context, Service } from "@deepseek-ai/cordis";
 import { WebSearchProvider, WebSearchRequest, WebSearchResult } from "@deepseek-ai/dsh-web";
+import { SettingsNamespace } from "@deepseek-ai/dsh-settings";
 //#region src/store.d.ts
 /** Provider route and pi-ai provider id owned by this bundle. */
 declare const OPENAI_CODEX_PROVIDER = "openai-codex";
@@ -125,8 +126,8 @@ declare const IMAGE_GENERATE_TOOL_NAME = "codex_connect_image_generate";
 //#region src/compatibility.d.ts
 declare const COMPATIBILITY_SCHEMA_VERSION: 1;
 declare const SUPPORTED_NODE_RANGE = "^22.19.0 || >=24.0.0";
-declare const SUPPORTED_DSH_PLUGIN_API_VERSION = "0.1.1-rc.2";
-declare const SUPPORTED_PI_AI_VERSION = "0.82.1";
+declare const SUPPORTED_DSH_PLUGIN_API_VERSION = "0.1.2-rc.1";
+declare const SUPPORTED_PI_AI_VERSION = "0.84.4";
 declare const PI_AI_PACKAGE = "@earendil-works/pi-ai";
 declare const DSH_PLUGIN_API_PACKAGES: readonly ["@deepseek-ai/dsh-agent", "@deepseek-ai/dsh-atomic-write", "@deepseek-ai/dsh-attachment", "@deepseek-ai/dsh-home-paths", "@deepseek-ai/dsh-host-webserver", "@deepseek-ai/dsh-invariants", "@deepseek-ai/dsh-llm", "@deepseek-ai/dsh-llm-pi-ai", "@deepseek-ai/dsh-fs", "@deepseek-ai/dsh-session", "@deepseek-ai/dsh-settings", "@deepseek-ai/dsh-tools", "@deepseek-ai/dsh-web"];
 declare const COMPATIBILITY_PACKAGES: readonly ["@deepseek-ai/dsh-llm", "@deepseek-ai/dsh-llm-pi-ai", "@earendil-works/pi-ai"];
@@ -169,12 +170,12 @@ declare const COMPATIBILITY_CONTRACT: {
     readonly node: "^22.19.0 || >=24.0.0";
   };
   readonly dshPluginApi: {
-    readonly version: "0.1.1-rc.2";
+    readonly version: "0.1.2-rc.1";
     readonly packages: readonly ["@deepseek-ai/dsh-agent", "@deepseek-ai/dsh-atomic-write", "@deepseek-ai/dsh-attachment", "@deepseek-ai/dsh-home-paths", "@deepseek-ai/dsh-host-webserver", "@deepseek-ai/dsh-invariants", "@deepseek-ai/dsh-llm", "@deepseek-ai/dsh-llm-pi-ai", "@deepseek-ai/dsh-fs", "@deepseek-ai/dsh-session", "@deepseek-ai/dsh-settings", "@deepseek-ai/dsh-tools", "@deepseek-ai/dsh-web"];
   };
   readonly piAi: {
     readonly package: "@earendil-works/pi-ai";
-    readonly version: "0.82.1";
+    readonly version: "0.84.4";
   };
 };
 /** Evaluate a captured set of versions without touching the filesystem. */
@@ -548,7 +549,7 @@ declare const name = "llm-openai-codex";
 /** The model registry required before the provider can register. */
 declare const inject: string[];
 /** Branded Host settings namespace used by the configurable-provider directory. */
-declare const OPENAI_CODEX_SETTINGS_NS: import("@deepseek-ai/dsh-settings").SettingsNamespace;
+declare const OPENAI_CODEX_SETTINGS_NS: SettingsNamespace;
 /** Composite model and standalone-search configuration. */
 interface Config {
   /** Exact Codex model ids shown by the conversation model picker. */

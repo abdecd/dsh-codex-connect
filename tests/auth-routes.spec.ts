@@ -69,9 +69,10 @@ interface CapturedRoute {
   handler(req: IncomingMessage, res: ServerResponse): Promise<void> | void
 }
 
-function captureRoutes(trustedOrigins: OpenAICodexTrustedOriginsStore = emptyTrustedOrigins): CapturedRoute[] {
+function captureRoutes(trustedOrigins: OpenAICodexTrustedOriginsStore = emptyTrustedOrigins, requestRejection: (request: IncomingMessage) => 401 | 403 | undefined = () => undefined): CapturedRoute[] {
   const routes: CapturedRoute[] = []
   const ctx = {
+    connection: { requestRejection },
     webServer: {
       register(route: CapturedRoute) {
         routes.push(route)
@@ -132,6 +133,22 @@ afterEach(async () => {
 })
 
 describe('OpenAI Codex Web OAuth boundary', () => {
+  it.each([401, 403] as const)('honors host rejection %s on every protected route before side effects', async status => {
+    const gate = vi.fn(() => status)
+    const origins = { has: vi.fn(async () => true) } as unknown as OpenAICodexTrustedOriginsStore
+    for (const route of captureRoutes(origins, gate)) {
+      const req = request({ method: route.path === OPENAI_CODEX_AUTH_STATUS_PATH ? 'GET' : 'POST' })
+      const res = response()
+      await route.handler(req, res)
+      expect(gate).toHaveBeenLastCalledWith(req)
+      expect(res.observed.status).toBe(status)
+    }
+    expect(origins.has).not.toHaveBeenCalled()
+    expect(mocked.status).not.toHaveBeenCalled()
+    expect(mocked.login).not.toHaveBeenCalled()
+    expect(mocked.logout).not.toHaveBeenCalled()
+  })
+
   it('returns a stable remote-origin error until the exact effective origin is trusted', async () => {
     root = await mkdtemp(join(tmpdir(), 'dsh-auth-routes-'))
     const origins = new OpenAICodexTrustedOriginsStore(join(root, '.openai-codex-trusted-origins.json'))

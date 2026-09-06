@@ -18,6 +18,7 @@ interface CapturedRoute {
 function routes(registry = new FastModeRegistry()): CapturedRoute[] {
   const captured: CapturedRoute[] = []
   const ctx = {
+    connection: { requestRejection: () => undefined },
     webServer: {
       register(route: CapturedRoute) {
         captured.push(route)

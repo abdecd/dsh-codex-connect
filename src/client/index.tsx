@@ -1,11 +1,13 @@
 /** Browser half: OpenAI Codex account management inside Plugin configuration. */
 
-import type { ClientContext } from '@deepseek-ai/dsh-client-runtime/client'
+import type { Context } from '@deepseek-ai/cordis'
 import type {} from '@deepseek-ai/dsh-client-ui-settings/client'
 import type {} from '@deepseek-ai/dsh-client-ui-settings-plugins/client'
 import type {} from '@deepseek-ai/dsh-client-locale/client'
 import type {} from '@deepseek-ai/dsh-client-ui-tool/client'
 import type {} from '@deepseek-ai/dsh-client-ui-slots'
+import type {} from '@deepseek-ai/dsh-client-ui-renderer/client'
+import type {} from '@deepseek-ai/dsh-api-session-controller/client'
 import type {} from '@deepseek-ai/dsh-client-connection/client'
 // Type-only: pulls the conversation input-region SlotMap declaration.
 import type {} from '@deepseek-ai/dsh-client-ui-conversation/client'
@@ -40,7 +42,7 @@ export const name = 'dsh-codex-connect-client'
 export const inject = ['slots', 'locale', 'connection', 'remote', 'settingsScope', 'sessions']
 
 /** Register account copy and the OpenAI Codex card under Plugin configuration. */
-export function apply(ctx: ClientContext): void {
+export function apply(ctx: Context): void {
   const namespace = 'settings.openai-codex'
   ctx.effect(() => ctx.locale.register(namespace, { zh, en }), 'dsh-codex-connect: settings copy')
   const t = ctx.locale.bind(namespace) as OpenAICodexPluginCardInjected['t']
@@ -61,7 +63,7 @@ export function apply(ctx: ClientContext): void {
     inject: (): CodexImageToolViewInjected => ({ sessions: ctx.sessions }),
   }, CodexImageToolView))
 
-  ctx.inject(['slots', 'modelDirectories'], (scope: ClientContext) => {
+  ctx.inject(['slots', 'modelDirectories'], (scope: Context) => {
     scope.slots.inject('conversation.input.right', () => scope.slots.register({
       name: 'conversation.input.right',
       id: 'openai-codex-fast-mode',

@@ -1,7 +1,7 @@
 import { spawnSync } from 'node:child_process'
 import { readFile } from 'node:fs/promises'
 
-const result = spawnSync('npm', ['pack', '--dry-run', '--json', '--ignore-scripts'], {
+const result = spawnSync(process.platform === 'win32' ? 'pnpm.cmd' : 'pnpm', ['--config.ignore-scripts=true', 'pack', '--dry-run', '--json'], {
   cwd: new URL('..', import.meta.url),
   encoding: 'utf8',
 })
@@ -10,7 +10,7 @@ if (result.status !== 0) {
   process.exit(result.status ?? 1)
 }
 
-const [manifest] = JSON.parse(result.stdout)
+const manifest = JSON.parse(result.stdout)
 const names = manifest.files.map(file => file.path)
 const required = ['LICENSE', 'NOTICE', 'README.md', 'package.json', 'compatibility.json', 'cordis.patch.yml', 'lib/index.js', 'lib/index.d.ts', 'lib/client.js', 'lib/bin.js']
 for (const name of required) {
@@ -39,4 +39,4 @@ if (!/codex_connect_image_generate/u.test(client)) {
   throw new Error('lib/client.js does not register the image generation result view')
 }
 
-process.stdout.write(`validated ${names.length} packed files (${manifest.size} bytes, ${manifest.unpackedSize} unpacked bytes)\n`)
+process.stdout.write(`validated ${names.length} packed files (${manifest.filename})\n`)

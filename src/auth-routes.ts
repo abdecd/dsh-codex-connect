@@ -5,6 +5,7 @@ import { dirname, join } from 'node:path'
 import type { AuthEvent, AuthPrompt } from '@earendil-works/pi-ai'
 import type { Context } from '@deepseek-ai/cordis'
 import type {} from '@deepseek-ai/dsh-host-webserver'
+import type {} from '@deepseek-ai/dsh-client-connection'
 import { loginOpenAICodex, logoutOpenAICodex, openAICodexAuthStatus } from './auth.ts'
 import type { OpenAICodexCredentialStore } from './store.ts'
 import {
@@ -409,6 +410,11 @@ export function registerOpenAICodexAuthRoutes(
     : new OpenAICodexTrustedOriginsStore())
   ctx.effect(() => {
     const authorize = async (req: IncomingMessage, res: ServerResponse): Promise<boolean> => {
+      const rejection = ctx.connection.requestRejection(req)
+      if (rejection !== undefined) {
+        json(res, rejection, { error: rejection === 401 ? 'unauthorized' : 'forbidden' })
+        return false
+      }
       const decision = await trustedRequestDecision(req, trustedOrigins)
       if (decision.trusted) return true
       json(res, 403, { error: decision.error })
