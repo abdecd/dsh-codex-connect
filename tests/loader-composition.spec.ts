@@ -63,6 +63,7 @@ describe('OpenAI Codex real composition', () => {
     expect(models.some(model => model.id === 'gpt-6-astra')).toBe(true)
     const gpt6 = await ctx.llm.resolveModelInfo('openai-codex', 'gpt-6-astra')
     expect(gpt6.reasoning?.efforts.map(effort => effort.id)).toEqual([
+      'minimal',
       'low',
       'medium',
       'high',

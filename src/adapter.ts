@@ -27,7 +27,7 @@ const OPENAI_CODEX_GPT6_MODEL: Model<'openai-codex-responses'> = {
   reasoning: true,
   thinkingLevelMap: {
     off: null,
-    minimal: null,
+    minimal: 'low',
     low: 'low',
     medium: 'medium',
     high: 'high',
@@ -155,6 +155,7 @@ export function createOpenAICodexAdapter(
     requestImageMaxBytes: OPENAI_CODEX_REQUEST_IMAGE_MAX_BYTES,
     retryPolicy: resolveRetryPolicy(undefined, 'dsh-codex-connect retryPolicy'),
     configuredMaxTokens: new Map(),
+    modelErrors: new Map(),
     piProvider: requestProvider(provider, fastMode),
   }]])
   const models: MutableModels = createModels({ credentials })

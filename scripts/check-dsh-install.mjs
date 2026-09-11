@@ -7,7 +7,7 @@ import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const JSON_SCHEMA_VERSION = 1
-const DEFAULT_DSH_VERSION = '0.1.2-rc.1'
+const DEFAULT_DSH_VERSION = '0.1.5-rc.2'
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 
 function commandName(name) {
@@ -84,7 +84,7 @@ function assertDoctorJson(value, dshHome, repoRoot) {
   }
   for (const name of expectedPackages) {
     const entry = compatibility?.['packages']?.[name]
-    const supported = name === '@earendil-works/pi-ai' ? '0.84.4' : DEFAULT_DSH_VERSION
+    const supported = name === '@earendil-works/pi-ai' ? '0.85.1' : DEFAULT_DSH_VERSION
     if (entry?.['supported'] !== supported || entry?.['installed'] !== supported || entry?.['status'] !== 'compatible') {
       throw new Error(`doctor JSON did not report compatible ${name}`)
     }
@@ -109,6 +109,7 @@ async function main() {
   const installRoot = join(tempRoot, 'dsh-install')
   const workspace = join(tempRoot, 'workspace')
   await mkdir(workspace, { recursive: true })
+  await mkdir(installRoot, { recursive: true })
   const env = {
     ...process.env,
     DSH_HOME: dshHome,
@@ -116,7 +117,7 @@ async function main() {
   }
 
   try {
-    const install = runCommand('npm', [
+    let install = runCommand('npm', [
       'install',
       '--prefix', installRoot,
       '--ignore-scripts',
@@ -125,7 +126,15 @@ async function main() {
       '--package-lock=false',
       `@deepseek-ai/dsh@${dshVersion}`,
     ], { cwd: workspace, env })
-    requireSuccess('npm install', install)
+    if (install.stdout.includes('prefer pnpm') || install.status !== 0) {
+      install = runCommand('pnpm', [
+        'add',
+        '--prefix', installRoot,
+        '--ignore-scripts',
+        `@deepseek-ai/dsh@${dshVersion}`,
+      ], { cwd: workspace, env })
+    }
+    requireSuccess('package install', install)
 
     const dshBinary = join(installRoot, 'node_modules', '.bin', process.platform === 'win32' ? 'dsh.cmd' : 'dsh')
     const versionResult = runCommand(dshBinary, ['--version'], { cwd: workspace, env })
