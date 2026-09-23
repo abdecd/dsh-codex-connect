@@ -62,7 +62,7 @@ dsh web
 
 打开 Harness 原生模型选择器，为当前正在使用的 agent 或会话选择一个 `openai-codex` 模型。这个选择与写入 profile 的默认模型或全局搜索路由是两件事。
 
-选择器会把可用项归在 **OpenAI Codex** 下。`GPT-5.6 Luna` 一类模型标识是规范名称，因此会保留原样，不翻译。
+选择器会把可用项归在 **OpenAI Codex** 下。`GPT-6 Luna` 一类模型标识是规范名称，因此会保留原样，不翻译。
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/franksong2702/dsh-codex-connect/main/docs/assets/zh/model-selector.jpg" alt="中文 DeepSeek Harness 模型选择器中的 OpenAI Codex 模型分组" width="360">
@@ -155,7 +155,7 @@ dsh plugin --profile web exec dsh-codex-connect doctor --json
 - id: agent-default-model
   config:
     provider: openai-codex
-    model: gpt-5.6-sol
+    model: gpt-6-solar
 ```
 
 如需把 Codex 选为 profile 的全局搜索路由，还需要另做一次显式配置：

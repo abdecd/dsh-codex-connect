@@ -316,20 +316,20 @@ declare const OPENAI_CODEX_MODEL_OPTIONS: readonly [{
   readonly id: "gpt-5.5";
   readonly name: "GPT-5.5";
 }, {
-  readonly id: "gpt-5.6-luna";
-  readonly name: "GPT-5.6 Luna";
-}, {
-  readonly id: "gpt-5.6-sol";
-  readonly name: "GPT-5.6 Sol";
-}, {
   readonly id: "gpt-5.6-terra";
   readonly name: "GPT-5.6 Terra";
+}, {
+  readonly id: "gpt-6-luna";
+  readonly name: "GPT-6 Luna";
+}, {
+  readonly id: "gpt-6-solar";
+  readonly name: "GPT-6 Solar";
 }, {
   readonly id: "gpt-6-astra";
   readonly name: "GPT-6 Astra";
 }];
 /** Default to showing every model known by this plugin. */
-declare const DEFAULT_OPENAI_CODEX_ENABLED_MODELS: ("gpt-5.3-codex-spark" | "gpt-5.4" | "gpt-5.4-mini" | "gpt-5.5" | "gpt-5.6-luna" | "gpt-5.6-sol" | "gpt-5.6-terra" | "gpt-6-astra")[];
+declare const DEFAULT_OPENAI_CODEX_ENABLED_MODELS: ("gpt-5.3-codex-spark" | "gpt-5.4" | "gpt-5.4-mini" | "gpt-5.5" | "gpt-5.6-terra" | "gpt-6-luna" | "gpt-6-solar" | "gpt-6-astra")[];
 /** Default model used by the standalone search endpoint. */
 declare const DEFAULT_OPENAI_CODEX_SEARCH_MODEL = "gpt-5.6-sol";
 /** Default search mode, matching the official local Codex client. */

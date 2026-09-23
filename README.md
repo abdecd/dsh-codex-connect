@@ -62,7 +62,7 @@ Expected result: the account area changes to **Signed in**. The screenshot below
 
 Open Harness's normal model picker and select an `openai-codex` model for the agent or session you are using. This selection is separate from writing the profile's default model or global search route.
 
-The picker groups the available entries under **OpenAI Codex**. Model identifiers such as `GPT-5.6 Luna` are canonical names, so they intentionally remain un-translated.
+The picker groups the available entries under **OpenAI Codex**. Model identifiers such as `GPT-6 Luna` are canonical names, so they intentionally remain un-translated.
 
 <p align="center">
   <img src="https://raw.githubusercontent.com/franksong2702/dsh-codex-connect/main/docs/assets/en/model-selector.jpg" alt="OpenAI Codex model group in the English-localized DeepSeek Harness model picker" width="360">
@@ -155,7 +155,7 @@ To make a Codex model the default for new agents, add or update the separate Har
 - id: agent-default-model
   config:
     provider: openai-codex
-    model: gpt-5.6-sol
+    model: gpt-6-solar
 ```
 
 Selecting Codex as the profile's global search route is another explicit change:

@@ -63,6 +63,10 @@ describe('OpenAI Codex Host settings integration', () => {
     }])
     const descriptor = ctx.settings.describe().find(entry => entry.ns === OpenAICodex.OPENAI_CODEX_SETTINGS_NS)
     expect(descriptor?.value).toEqual(OpenAICodex.DEFAULT_OPENAI_CODEX_SETTINGS)
+    expect(OpenAICodex.OPENAI_CODEX_MODEL_OPTIONS).toContainEqual({ id: 'gpt-6-luna', name: 'GPT-6 Luna' })
+    expect(OpenAICodex.OPENAI_CODEX_MODEL_OPTIONS).toContainEqual({ id: 'gpt-6-solar', name: 'GPT-6 Solar' })
+    expect(OpenAICodex.OPENAI_CODEX_MODEL_OPTIONS.map(model => model.id)).not.toContain('gpt-5.6-luna')
+    expect(OpenAICodex.OPENAI_CODEX_MODEL_OPTIONS.map(model => model.id)).not.toContain('gpt-5.6-sol')
     expect(ctx.tools.get(OpenAICodex.VIEW_IMAGE_TOOL_NAME)).toBeUndefined()
     expect(ctx.tools.get(OpenAICodex.IMAGE_GENERATE_TOOL_NAME)).toBeUndefined()
     await expect(ctx.web.search({ query: 'disabled' })).rejects.toMatchObject({ code: 'WEB_PROVIDER_UNAVAILABLE' })
@@ -83,9 +87,19 @@ describe('OpenAI Codex Host settings integration', () => {
     await expect(ctx.web.search({ query: 'enabled' })).rejects.toMatchObject({ code: 'WEB_PROVIDER_CREDENTIAL_MISSING' })
 
     await ctx.settings.update(OpenAICodex.OPENAI_CODEX_SETTINGS_NS, {
-      enabledModels: ['gpt-6-astra'],
+      enabledModels: ['gpt-6-solar'],
     })
-    expect((await ctx.llm.listModels(OpenAICodex.OPENAI_CODEX_PROVIDER)).map(model => model.id)).toEqual(['gpt-6-astra'])
+    expect((await ctx.llm.listModels(OpenAICodex.OPENAI_CODEX_PROVIDER)).map(model => model.id)).toEqual(['gpt-6-solar'])
+    expect(OpenAICodex.resolveOpenAICodexSettings({ ...OpenAICodex.DEFAULT_OPENAI_CODEX_SETTINGS, enabledModels: ['gpt-5.6-luna', 'gpt-5.6-sol'] }).enabledModels)
+      .toEqual(['gpt-6-luna', 'gpt-6-solar'])
+    expect(OpenAICodex.decodeOpenAICodexSettings({
+      ...OpenAICodex.DEFAULT_OPENAI_CODEX_SETTINGS,
+      enabledModels: ['gpt-5.6-luna', 'gpt-5.6-sol'],
+      searchModel: 'gpt-5.6-sol',
+    })).toMatchObject({
+      enabledModels: ['gpt-6-luna', 'gpt-6-solar'],
+      searchModel: 'gpt-5.6-sol',
+    })
     await expect(ctx.llm.resolveModelInfo(OpenAICodex.OPENAI_CODEX_PROVIDER, 'gpt-5.6-sol')).resolves.toMatchObject({
       id: 'gpt-5.6-sol',
       name: 'GPT-5.6 Sol',

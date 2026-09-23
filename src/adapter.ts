@@ -55,6 +55,10 @@ const OPENAI_CODEX_GPT6_MODEL: Model<'openai-codex-responses'> = {
     supportsToolSearch: true,
   },
 }
+const OPENAI_CODEX_GPT6_PICKER_MODELS: readonly Model<'openai-codex-responses'>[] = [
+  { ...OPENAI_CODEX_GPT6_MODEL, id: 'gpt-6-luna', name: 'GPT-6 Luna' },
+  { ...OPENAI_CODEX_GPT6_MODEL, id: 'gpt-6-solar', name: 'GPT-6 Solar' },
+]
 
 const openAICodexAuthContext: AuthContext = {
   env: async () => undefined,
@@ -134,16 +138,15 @@ export function createOpenAICodexAdapter(
 ): PiAiAdapter {
   const upstreamProvider = openaiCodexProvider()
   const upstreamGetModels = upstreamProvider.getModels.bind(upstreamProvider)
-  // Backport the GPT-6 Astra catalog entry from the pi upstream until the
-  // pinned pi-ai dependency ships it. The Codex Responses transport is already
-  // model-id based, so no separate request implementation is required.
+  // Backport GPT-6 catalog entries missing from pinned pi-ai. The Codex
+  // Responses transport is model-id based, so no separate request path is needed.
   const provider: Provider<'openai-codex-responses'> = {
     ...upstreamProvider,
     getModels: () => {
       const models = upstreamGetModels()
-      return models.some(model => model.id === OPENAI_CODEX_GPT6_MODEL.id)
-        ? models
-        : [...models, OPENAI_CODEX_GPT6_MODEL]
+      const additions = [OPENAI_CODEX_GPT6_MODEL, ...OPENAI_CODEX_GPT6_PICKER_MODELS]
+        .filter(model => !models.some(existing => existing.id === model.id))
+      return additions.length === 0 ? models : [...models, ...additions]
     },
   }
   const profiles = new Map<string, ResolvedPiAiProviderProfile>([[OPENAI_CODEX_PROVIDER, {

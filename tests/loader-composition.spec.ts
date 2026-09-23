@@ -59,8 +59,20 @@ describe('OpenAI Codex real composition', () => {
 
     expect(ctx.llm.listProviders()).toEqual([{ id: 'openai-codex', name: 'OpenAI Codex' }])
     const models = await ctx.llm.listModels('openai-codex')
-    expect(models.some(model => model.id === 'gpt-5.6-sol')).toBe(true)
+    expect(models.some(model => model.id === 'gpt-5.6-terra')).toBe(true)
     expect(models.some(model => model.id === 'gpt-6-astra')).toBe(true)
+    expect(models.some(model => model.id === 'gpt-6-luna')).toBe(true)
+    expect(models.some(model => model.id === 'gpt-6-solar')).toBe(true)
+    await expect(ctx.llm.resolveModelInfo('openai-codex', 'gpt-6-luna')).resolves.toMatchObject({
+      id: 'gpt-6-luna',
+      name: 'GPT-6 Luna',
+      reasoning: { efforts: expect.arrayContaining([{ id: 'low', name: 'Low' }]) },
+    })
+    await expect(ctx.llm.resolveModelInfo('openai-codex', 'gpt-6-solar')).resolves.toMatchObject({
+      id: 'gpt-6-solar',
+      name: 'GPT-6 Solar',
+      reasoning: { efforts: expect.arrayContaining([{ id: 'low', name: 'Low' }]) },
+    })
     const gpt6 = await ctx.llm.resolveModelInfo('openai-codex', 'gpt-6-astra')
     expect(gpt6.reasoning?.efforts.map(effort => effort.id)).toEqual([
       'minimal',

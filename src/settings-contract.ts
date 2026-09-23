@@ -15,14 +15,27 @@ export const OPENAI_CODEX_MODEL_OPTIONS = [
   { id: 'gpt-5.4', name: 'GPT-5.4' },
   { id: 'gpt-5.4-mini', name: 'GPT-5.4 mini' },
   { id: 'gpt-5.5', name: 'GPT-5.5' },
-  { id: 'gpt-5.6-luna', name: 'GPT-5.6 Luna' },
-  { id: 'gpt-5.6-sol', name: 'GPT-5.6 Sol' },
   { id: 'gpt-5.6-terra', name: 'GPT-5.6 Terra' },
+  { id: 'gpt-6-luna', name: 'GPT-6 Luna' },
+  { id: 'gpt-6-solar', name: 'GPT-6 Solar' },
   { id: 'gpt-6-astra', name: 'GPT-6 Astra' },
 ] as const
 
 /** Default to showing every model known by this plugin. */
 export const DEFAULT_OPENAI_CODEX_ENABLED_MODELS = OPENAI_CODEX_MODEL_OPTIONS.map(model => model.id)
+
+const REPLACED_OPENAI_CODEX_MODEL_IDS = new Map<string, string>([
+  ['gpt-5.6-luna', 'gpt-6-luna'],
+  ['gpt-5.6-sol', 'gpt-6-solar'],
+])
+
+function normalizeModelId(id: string): string {
+  return REPLACED_OPENAI_CODEX_MODEL_IDS.get(id) ?? id
+}
+
+function normalizeEnabledModels(modelIds: readonly string[]): string[] {
+  return [...new Set(modelIds.map(normalizeModelId))]
+}
 
 /** Default model used by the standalone search endpoint. */
 export const DEFAULT_OPENAI_CODEX_SEARCH_MODEL = 'gpt-5.6-sol'
@@ -66,7 +79,7 @@ export function resolveOpenAICodexSettings(
     ...value,
     enabledModels: value.enabledModels === undefined
       ? [...DEFAULT_OPENAI_CODEX_ENABLED_MODELS]
-      : [...value.enabledModels],
+      : normalizeEnabledModels(value.enabledModels),
   }
 }
 
@@ -99,7 +112,7 @@ export function decodeOpenAICodexSettings(value: unknown): OpenAICodexSettingsCo
   return {
     enabledModels: enabledModels === undefined
       ? [...DEFAULT_OPENAI_CODEX_ENABLED_MODELS]
-      : [...enabledModels],
+      : normalizeEnabledModels(enabledModels as string[]),
     enableSearch,
     enableImageTool,
     enableImageGeneration: enableImageGeneration ?? false,

@@ -65,7 +65,7 @@ Apply only requested choices and preserve unrelated keys:
 - id: agent-default-model
   config:
     provider: openai-codex
-    model: gpt-5.6-sol
+    model: gpt-6-solar
 ```
 
 Do not add the last two rows unless the user separately requested those routing changes.
